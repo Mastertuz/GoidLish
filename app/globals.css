@@ -119,12 +119,25 @@
     padding: 0;
     height: 100%;
     width: 100%;
+    overflow-x: hidden;
   }
   * {
     @apply border-border outline-ring/50;
+    box-sizing: border-box;
   }
   body {
     @apply bg-background text-foreground;
+  }
+  
+  /* Предотвращение горизонтального скролла */
+  html {
+    scroll-behavior: smooth;
+  }
+  
+  /* Ограничение ширины контента */
+  .container {
+    max-width: 100vw;
+    overflow-x: hidden;
   }
 }
 

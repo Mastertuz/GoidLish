@@ -10,12 +10,12 @@ import { Play, Brain } from "lucide-react";
 
 function DefinitionModeCard() {
   return (
-    <Card className="bg-linear-to-br from-gray-900 via-black to-gray-800 border-gray-700 shadow-2xl hover:shadow-3xl transition-all duration-300 hover:scale-105 group">
+    <Card className="w-full bg-linear-to-br from-gray-900 via-black to-gray-800 border-gray-700 shadow-2xl hover:shadow-3xl transition-all duration-300 hover:scale-105 group">
       <CardHeader className="relative overflow-hidden">
         <div className="absolute inset-0 bg-linear-to-br from-green-600/20 to-teal-600/20"></div>
-        <div className="relative flex items-center justify-center p-8">
-          <div className="bg-linear-to-br from-green-500 to-teal-600 p-6 rounded-2xl shadow-lg">
-            <Brain className="w-16 h-16 text-white" />
+        <div className="relative flex items-center justify-center p-4 md:p-8">
+          <div className="bg-linear-to-br from-green-500 to-teal-600 p-4 md:p-6 rounded-2xl shadow-lg">
+            <Brain className="w-12 h-12 md:w-16 md:h-16 text-white" />
           </div>
         </div>
       </CardHeader>

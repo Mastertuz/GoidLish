@@ -11,8 +11,17 @@ const registerSchema = z.object({
 
 export async function POST(request: NextRequest) {
   try {
+    console.log('=== Registration attempt ===');
+    
     const body = await request.json();
+    console.log('Request body received:', { ...body, password: '[HIDDEN]' });
+    
     const validatedData = registerSchema.parse(body);
+    console.log('Data validated successfully');
+
+    // Проверяем подключение к БД
+    await prisma.$connect();
+    console.log('Database connected successfully');
 
     // Проверяем, существует ли пользователь
     const existingUser = await prisma.user.findUnique({
@@ -20,6 +29,7 @@ export async function POST(request: NextRequest) {
         email: validatedData.email,
       },
     });
+    console.log('Existing user check:', existingUser ? 'User exists' : 'User not found');
 
     if (existingUser) {
       return NextResponse.json(
@@ -54,6 +64,9 @@ export async function POST(request: NextRequest) {
     );
   } catch (error) {
     console.error("Registration error:", error);
+    
+    // Закрываем соединение при ошибке
+    await prisma.$disconnect();
 
     if (error instanceof z.ZodError) {
       return NextResponse.json(
@@ -62,8 +75,25 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Детальная обработка ошибок Prisma
+    if (error && typeof error === 'object' && 'code' in error) {
+      const prismaError = error as any;
+      if (prismaError.code === 'P2002') {
+        return NextResponse.json(
+          { error: "Пользователь с таким email уже существует" },
+          { status: 400 }
+        );
+      }
+      if (prismaError.code === 'P1001') {
+        return NextResponse.json(
+          { error: "Не удается подключиться к базе данных" },
+          { status: 500 }
+        );
+      }
+    }
+
     return NextResponse.json(
-      { error: "Произошла ошибка при регистрации" },
+      { error: "Произошла ошибка при регистрации. Попробуйте позже." },
       { status: 500 }
     );
   }

@@ -14,7 +14,7 @@ const updateWordSchema = z.object({
 // Обновить слово
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await auth();
@@ -26,7 +26,8 @@ export async function PUT(
       );
     }
 
-    const wordId = params.id;
+    const resolvedParams = await params;
+    const wordId = resolvedParams.id;
     const body = await request.json();
     const validatedData = updateWordSchema.parse(body);
 
@@ -102,7 +103,7 @@ export async function PUT(
 // Удалить слово из словаря пользователя
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await auth();
@@ -114,7 +115,8 @@ export async function DELETE(
       );
     }
 
-    const wordId = params.id;
+    const resolvedParams = await params;
+    const wordId = resolvedParams.id;
 
     // Проверяем, принадлежит ли слово пользователю
     const word = await prisma.word.findUnique({

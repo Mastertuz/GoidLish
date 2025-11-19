@@ -3,10 +3,10 @@ export interface Word {
   id: string;
   english: string;
   russian: string;
-  definition?: string;
-  example?: string;
-  imageUrl?: string;
-  createdAt: string;
+  definition?: string | null;
+  example?: string | null;
+  imageUrl?: string | null;
+  createdAt: Date;
 }
 
 export interface WordFormData {

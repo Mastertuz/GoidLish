@@ -4,6 +4,7 @@ import { auth } from '@/auth'
 import { prisma } from '../../../lib/prisma'
 import ModernTrainingMode from '@/components/shared/ModernTrainingMode'
 import WordSelector from '@/components/shared/WordSelector'
+import { Word } from '@/types'
 
 interface TrainingPageProps {
   params: Promise<{ mode: string }>
@@ -14,15 +15,6 @@ interface TrainingPageProps {
     words?: string
     setup?: string
   }>
-}
-
-type Word = {
-  id: string
-  english: string
-  russian: string
-  definition: string | null
-  example: string | null
-  imageUrl: string | null
 }
 
 async function getUserWords(userId: string): Promise<Word[]> {
@@ -49,7 +41,8 @@ async function getUserWords(userId: string): Promise<Word[]> {
         russian: true,
         definition: true,
         example: true,
-        imageUrl: true
+        imageUrl: true,
+        createdAt: true
       },
       orderBy: { english: 'asc' }
     });

@@ -7,35 +7,36 @@ import UserDictionary from "@/components/user/UserDictionary";
 
 export default function Home() {
   return (
-    <main className="min-h-screen bg-linear-to-br from-slate-950 via-slate-900 to-slate-950 p-4 overflow-x-hidden">
-      <div className="w-full max-w-6xl mx-auto px-4">
-        {/* Header with authentication button */}
-        <div className="flex flex-col lg:flex-row justify-between items-center mb-12 mt-4 gap-4">
-          <div className="flex-1 w-full">
-            <div className="text-center">
-              <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-2">English Learning Platform</h1>
-              <p className="text-slate-400 text-base md:text-lg">Выберите режим тренировки для изучения английского</p>
-            </div>
+    <main className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
+      <div className="container mx-auto px-4 py-8 lg:py-12">
+        {/* Header */}
+        <header className="flex flex-col lg:flex-row justify-between items-center gap-8 mb-16">
+          <div className="text-center lg:text-left flex-1">
+            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white leading-tight">
+              English Learning Platform
+            </h1>
+            <p className="mt-4 text-lg sm:text-xl text-slate-300">
+              Выберите режим тренировки и начните изучать английский прямо сейчас
+            </p>
           </div>
-          <div className="w-full lg:w-auto lg:ml-4">
             <AuthButton />
-          </div>
-        </div>
 
-        {/* Training modes */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 lg:gap-8 mb-12 w-full">
+        </header>
+        {/* Training Modes Grid */}
+        <section className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6 lg:gap-8 mb-20">
           <TrainingCard />
           <DefinitionModeCard />
           <GapFillModeCard />
           <ImageModeCard />
-        </div>
+        </section>
 
-        {/* User dictionary */}
-        <div className="mt-8 w-full max-w-4xl mx-auto">
+        {/* User Dictionary */}
+        <section className="max-w-5xl mx-auto">
           <UserDictionary />
-        </div>
 
+        </section>
       </div>
+
     </main>
   );
 }

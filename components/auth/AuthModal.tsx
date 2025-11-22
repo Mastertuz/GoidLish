@@ -8,7 +8,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Mail, Lock, User, AlertCircle, CheckCircle } from "lucide-react";
 
@@ -52,9 +51,6 @@ export default function AuthModal({ open, onOpenChange }: AuthModalProps) {
     setIsLoading(true);
     setError("");
 
-    console.log('=== Login attempt ===');
-    console.log('Email:', loginEmail);
-
     try {
       const result = await signIn("credentials", {
         email: loginEmail,
@@ -62,26 +58,14 @@ export default function AuthModal({ open, onOpenChange }: AuthModalProps) {
         redirect: false,
       });
 
-      console.log('SignIn result:', result);
-
       if (result?.error) {
-        console.error('SignIn error:', result.error);
-        if (result.error === 'CredentialsSignin') {
-          setError("Неверный email или пароль");
-        } else {
-          setError("Ошибка при входе: " + result.error);
-        }
+        setError(result.error === "CredentialsSignin" ? "Неверный email или пароль" : "Ошибка при входе");
       } else if (result?.ok) {
-        console.log('Login successful, closing modal');
         setSuccess("Вход выполнен успешно!");
         handleClose();
-        // Принудительное обновление страницы для получения новой сессии
-        setTimeout(() => {
-          window.location.reload();
-        }, 500);
+        setTimeout(() => window.location.reload(), 500);
       }
-    } catch (error) {
-      console.error("Login error:", error);
+    } catch {
       setError("Произошла ошибка при входе");
     } finally {
       setIsLoading(false);
@@ -94,7 +78,6 @@ export default function AuthModal({ open, onOpenChange }: AuthModalProps) {
     setError("");
     setSuccess("");
 
-    // Проверка паролей
     if (registerPassword !== confirmPassword) {
       setError("Пароли не совпадают");
       setIsLoading(false);
@@ -110,22 +93,14 @@ export default function AuthModal({ open, onOpenChange }: AuthModalProps) {
     try {
       const response = await fetch("/api/auth/register", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ 
-          name: registerName, 
-          email: registerEmail, 
-          password: registerPassword 
-        }),
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: registerName, email: registerEmail, password: registerPassword }),
       });
 
       const data = await response.json();
 
       if (response.ok) {
         setSuccess("Аккаунт создан! Выполняем вход...");
-        
-        // Автоматически входим в систему после регистрации
         const loginResult = await signIn("credentials", {
           email: registerEmail,
           password: registerPassword,
@@ -134,7 +109,6 @@ export default function AuthModal({ open, onOpenChange }: AuthModalProps) {
 
         if (loginResult?.ok) {
           handleClose();
-          // Принудительное обновление страницы для получения новой сессии
           window.location.reload();
         } else {
           setError("Ошибка входа после регистрации");
@@ -144,8 +118,7 @@ export default function AuthModal({ open, onOpenChange }: AuthModalProps) {
       } else {
         setError(data.error || "Произошла ошибка при регистрации");
       }
-    } catch (error) {
-      console.error("Registration error:", error);
+    } catch {
       setError("Произошла ошибка при регистрации");
     } finally {
       setIsLoading(false);
@@ -154,21 +127,25 @@ export default function AuthModal({ open, onOpenChange }: AuthModalProps) {
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="w-[95vw] max-w-md max-h-[90vh] overflow-y-auto bg-slate-900 border-slate-700 text-slate-100 mx-auto">
+      <DialogContent className="bg-slate-900 border-slate-700 text-slate-100"
+       style={{
+              position: 'fixed',
+              top: '50vh',
+              left: '50vw',
+              transform: 'translate(-50%, -50%)',
+              zIndex: 50
+            }}
+      >
         <DialogHeader>
-          <DialogTitle className="text-2xl font-bold text-white text-center">
+          <DialogTitle className="text-2xl font-bold text-center text-white">
             Добро пожаловать
           </DialogTitle>
         </DialogHeader>
 
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="mt-6">
           <TabsList className="grid w-full grid-cols-2 bg-slate-800">
-            <TabsTrigger value="login" className="data-[state=active]:bg-slate-700 data-[state=active]:text-white">
-              Вход
-            </TabsTrigger>
-            <TabsTrigger value="register" className="data-[state=active]:bg-slate-700 data-[state=active]:text-white">
-              Регистрация
-            </TabsTrigger>
+            <TabsTrigger value="login" className="data-[state=active]:bg-slate-700">Вход</TabsTrigger>
+            <TabsTrigger value="register" className="data-[state=active]:bg-slate-700">Регистрация</TabsTrigger>
           </TabsList>
 
           {error && (
@@ -185,12 +162,11 @@ export default function AuthModal({ open, onOpenChange }: AuthModalProps) {
             </Alert>
           )}
 
-          <TabsContent value="login" className="space-y-4 mt-4">
+          <TabsContent value="login" className="mt-4">
             <form onSubmit={handleLogin} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="login-email" className="text-slate-300 flex items-center gap-2">
-                  <Mail className="h-4 w-4" />
-                  Email
+                  <Mail className="h-4 w-4" /> Email
                 </Label>
                 <Input
                   id="login-email"
@@ -198,16 +174,15 @@ export default function AuthModal({ open, onOpenChange }: AuthModalProps) {
                   value={loginEmail}
                   onChange={(e) => setLoginEmail(e.target.value)}
                   required
+                  disabled={isLoading}
                   className="bg-slate-800 border-slate-600 text-white placeholder:text-slate-400 focus:border-slate-500"
                   placeholder="your@email.com"
-                  disabled={isLoading}
                 />
               </div>
-              
+
               <div className="space-y-2">
                 <Label htmlFor="login-password" className="text-slate-300 flex items-center gap-2">
-                  <Lock className="h-4 w-4" />
-                  Пароль
+                  <Lock className="h-4 w-4" /> Пароль
                 </Label>
                 <Input
                   id="login-password"
@@ -215,15 +190,15 @@ export default function AuthModal({ open, onOpenChange }: AuthModalProps) {
                   value={loginPassword}
                   onChange={(e) => setLoginPassword(e.target.value)}
                   required
+                  disabled={isLoading}
                   className="bg-slate-800 border-slate-600 text-white placeholder:text-slate-400 focus:border-slate-500"
                   placeholder="••••••••"
-                  disabled={isLoading}
                 />
               </div>
 
-              <Button 
-                type="submit" 
-                className="w-full bg-linear-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-medium"
+              <Button
+                type="submit"
+                className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-medium"
                 disabled={isLoading}
               >
                 {isLoading ? "Вхожу..." : "Войти"}
@@ -231,12 +206,11 @@ export default function AuthModal({ open, onOpenChange }: AuthModalProps) {
             </form>
           </TabsContent>
 
-          <TabsContent value="register" className="space-y-4 mt-4">
+          <TabsContent value="register" className="mt-4">
             <form onSubmit={handleRegister} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="register-name" className="text-slate-300 flex items-center gap-2">
-                  <User className="h-4 w-4" />
-                  Имя
+                  <User className="h-4 w-4" /> Имя
                 </Label>
                 <Input
                   id="register-name"
@@ -244,16 +218,15 @@ export default function AuthModal({ open, onOpenChange }: AuthModalProps) {
                   value={registerName}
                   onChange={(e) => setRegisterName(e.target.value)}
                   required
+                  disabled={isLoading}
                   className="bg-slate-800 border-slate-600 text-white placeholder:text-slate-400 focus:border-slate-500"
                   placeholder="Ваше имя"
-                  disabled={isLoading}
                 />
               </div>
 
               <div className="space-y-2">
                 <Label htmlFor="register-email" className="text-slate-300 flex items-center gap-2">
-                  <Mail className="h-4 w-4" />
-                  Email
+                  <Mail className="h-4 w-4" /> Email
                 </Label>
                 <Input
                   id="register-email"
@@ -261,16 +234,15 @@ export default function AuthModal({ open, onOpenChange }: AuthModalProps) {
                   value={registerEmail}
                   onChange={(e) => setRegisterEmail(e.target.value)}
                   required
+                  disabled={isLoading}
                   className="bg-slate-800 border-slate-600 text-white placeholder:text-slate-400 focus:border-slate-500"
                   placeholder="your@email.com"
-                  disabled={isLoading}
                 />
               </div>
-              
+
               <div className="space-y-2">
                 <Label htmlFor="register-password" className="text-slate-300 flex items-center gap-2">
-                  <Lock className="h-4 w-4" />
-                  Пароль
+                  <Lock className="h-4 w-4" /> Пароль
                 </Label>
                 <Input
                   id="register-password"
@@ -278,16 +250,15 @@ export default function AuthModal({ open, onOpenChange }: AuthModalProps) {
                   value={registerPassword}
                   onChange={(e) => setRegisterPassword(e.target.value)}
                   required
+                  disabled={isLoading}
                   className="bg-slate-800 border-slate-600 text-white placeholder:text-slate-400 focus:border-slate-500"
                   placeholder="••••••••"
-                  disabled={isLoading}
                 />
               </div>
 
               <div className="space-y-2">
                 <Label htmlFor="confirm-password" className="text-slate-300 flex items-center gap-2">
-                  <Lock className="h-4 w-4" />
-                  Подтвердите пароль
+                  <Lock className="h-4 w-4" /> Подтвердите пароль
                 </Label>
                 <Input
                   id="confirm-password"
@@ -295,15 +266,15 @@ export default function AuthModal({ open, onOpenChange }: AuthModalProps) {
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   required
+                  disabled={isLoading}
                   className="bg-slate-800 border-slate-600 text-white placeholder:text-slate-400 focus:border-slate-500"
                   placeholder="••••••••"
-                  disabled={isLoading}
                 />
               </div>
 
-              <Button 
-                type="submit" 
-                className="w-full bg-linear-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700 text-white font-medium"
+              <Button
+                type="submit"
+                className="w-full bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700 text-white font-medium"
                 disabled={isLoading}
               >
                 {isLoading ? "Регистрируем..." : "Зарегистрироваться"}

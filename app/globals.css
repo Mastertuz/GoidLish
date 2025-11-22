@@ -139,29 +139,6 @@
     max-width: 100vw;
     overflow-x: hidden;
   }
-
-  /* Центрирование модальных окон */
-  [data-radix-popper-content-wrapper] {
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    min-height: 100vh !important;
-  }
-
-  /* Центрирование dialog content */
-  .fixed.inset-0 {
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    padding: 1rem !important;
-  }
-
-  /* Responsive dialog */
-  @media (max-width: 768px) {
-    .fixed.inset-0 {
-      padding: 0.5rem !important;
-    }
-  }
 }
 
 /* 3D Card Flip Styles */

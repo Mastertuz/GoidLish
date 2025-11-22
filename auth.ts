@@ -20,26 +20,45 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         password: {},
       },
       authorize: async (credentials) => {
-        const validatedCredentials = schema.login.parse(credentials);
+        try {
+          console.log('=== Auth authorize attempt ===');
+          console.log('Credentials received:', { email: credentials?.email, hasPassword: !!credentials?.password });
+          
+          const validatedCredentials = schema.login.parse(credentials);
+          console.log('Credentials validated');
 
-        const user = await prisma.user.findUnique({
-          where: { email: validatedCredentials.email },
-        });
+          const user = await prisma.user.findUnique({
+            where: { email: validatedCredentials.email },
+          });
+          console.log('User found:', { exists: !!user, hasPassword: !!user?.password });
 
-        if (!user || !user.password) {
-          throw new Error("Invalid credentials.");
+          if (!user || !user.password) {
+            console.log('User not found or no password');
+            return null;
+          }
+
+          const isPasswordValid = await bcrypt.compare(
+            validatedCredentials.password,
+            user.password
+          );
+          console.log('Password valid:', isPasswordValid);
+
+          if (!isPasswordValid) {
+            console.log('Invalid password');
+            return null;
+          }
+
+          console.log('Auth successful, returning user:', { id: user.id, email: user.email });
+          return {
+            id: user.id,
+            email: user.email,
+            name: user.name,
+            role: user.role || 'user'
+          };
+        } catch (error) {
+          console.error('Auth error:', error);
+          return null;
         }
-
-        const isPasswordValid = await bcrypt.compare(
-          validatedCredentials.password,
-          user.password
-        );
-
-        if (!isPasswordValid) {
-          throw new Error("Invalid credentials.");
-        }
-
-        return user;
       },
     }),
   ],

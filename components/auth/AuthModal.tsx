@@ -52,6 +52,9 @@ export default function AuthModal({ open, onOpenChange }: AuthModalProps) {
     setIsLoading(true);
     setError("");
 
+    console.log('=== Login attempt ===');
+    console.log('Email:', loginEmail);
+
     try {
       const result = await signIn("credentials", {
         email: loginEmail,
@@ -59,12 +62,23 @@ export default function AuthModal({ open, onOpenChange }: AuthModalProps) {
         redirect: false,
       });
 
+      console.log('SignIn result:', result);
+
       if (result?.error) {
-        setError("Неверный email или пароль");
+        console.error('SignIn error:', result.error);
+        if (result.error === 'CredentialsSignin') {
+          setError("Неверный email или пароль");
+        } else {
+          setError("Ошибка при входе: " + result.error);
+        }
       } else if (result?.ok) {
+        console.log('Login successful, closing modal');
+        setSuccess("Вход выполнен успешно!");
         handleClose();
         // Принудительное обновление страницы для получения новой сессии
-        window.location.reload();
+        setTimeout(() => {
+          window.location.reload();
+        }, 500);
       }
     } catch (error) {
       console.error("Login error:", error);
@@ -140,7 +154,7 @@ export default function AuthModal({ open, onOpenChange }: AuthModalProps) {
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto bg-slate-900 border-slate-700 text-slate-100 fixed top-[50%] left-[50%] translate-x-[-50%] translate-y-[-50%] z-50">
+      <DialogContent className="w-[95vw] max-w-md max-h-[90vh] overflow-y-auto bg-slate-900 border-slate-700 text-slate-100 mx-auto my-auto z-50">
         <DialogHeader>
           <DialogTitle className="text-2xl font-bold text-white text-center">
             Добро пожаловать

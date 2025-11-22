@@ -14,9 +14,9 @@ z8caE2DMhkEoxtcsbJUdWQShErvU1Heirox17iz4ufo=
 
 ## 🌐 NEXTAUTH_URL
 ```
-https://goid-lish-p58x.vercel.app
+https://goid-dvbvm2dr1-vasils-projects-58cc2e6f.vercel.app
 ```
-✅ **Обновлено для вашего домена!**
+✅ **Обновлено для нового домена!**
 
 ## 📤 UPLOADTHING_TOKEN
 ```

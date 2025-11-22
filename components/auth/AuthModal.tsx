@@ -154,7 +154,7 @@ export default function AuthModal({ open, onOpenChange }: AuthModalProps) {
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="w-[95vw] max-w-md max-h-[90vh] overflow-y-auto bg-slate-900 border-slate-700 text-slate-100">
+      <DialogContent className="w-[95vw] max-w-md max-h-[90vh] overflow-y-auto bg-slate-900 border-slate-700 text-slate-100 mx-auto">
         <DialogHeader>
           <DialogTitle className="text-2xl font-bold text-white text-center">
             Добро пожаловать

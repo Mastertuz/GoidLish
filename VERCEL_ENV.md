@@ -14,7 +14,7 @@ z8caE2DMhkEoxtcsbJUdWQShErvU1Heirox17iz4ufo=
 
 ## 🌐 NEXTAUTH_URL
 ```
-https://goid-pp2kvk41d-vasils-projects-58cc2e6f.vercel.app
+https://goid-mxq5mub81-vasils-projects-58cc2e6f.vercel.app
 ```
 ✅ **Обновлено для нового домена!**
 

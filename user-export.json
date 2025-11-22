@@ -1,0 +1,323 @@
+{
+  "user": {
+    "email": "goida@goida.com",
+    "name": "vasil",
+    "password": "$2b$12$WFEq3lMu86a7d.piYBH8Tujv5Kv50D2JFdwJv9NH2aHffPfxprA.6",
+    "role": "user"
+  },
+  "dictionaries": [
+    {
+      "name": "Словарь пользователя vasil",
+      "words": [
+        {
+          "english": "innocuous",
+          "russian": "безобидный",
+          "definition": "not likely to upset or harm anyone",
+          "example": "The comment seemed innocuous at first, but later it turned out to be quite meaningful",
+          "imageUrl": null
+        },
+        {
+          "english": "pond",
+          "russian": "пруд",
+          "definition": "a small area of water, especially one that has been made artificially in a park or garden",
+          "example": "Existing ponds need to be promoted with care and require careful maintenance.",
+          "imageUrl": "/uploads/1763541740675-v8r59q.jpg"
+        },
+        {
+          "english": "icicle",
+          "russian": "сосулька",
+          "definition": "a long, thin piece of ice that hangs down from something",
+          "example": "An icicle hung from the roof, sparkling in the morning sun.",
+          "imageUrl": "/uploads/1763553669553-mjmaoh.jpg"
+        },
+        {
+          "english": "stifle",
+          "russian": "подавлять",
+          "definition": "to stop something from happening or continuing",
+          "example": "to stifle a sneeze",
+          "imageUrl": null
+        },
+        {
+          "english": "taunt",
+          "russian": "дразнить",
+          "definition": "to repeatedly say unkind things to someone in order to upset them or make them angry",
+          "example": "He was taunted by his classmates because of his size.",
+          "imageUrl": null
+        },
+        {
+          "english": "swirl",
+          "russian": "кружиться",
+          "definition": "to move around and around quickly, or to make something do this",
+          "example": "The mist swirled round the castle.",
+          "imageUrl": null
+        },
+        {
+          "english": "inadequacy",
+          "russian": "недостаток",
+          "definition": "the fact that something is not good enough or is too small in amount",
+          "example": "The inadequacy of the budget is likely to cause problems.",
+          "imageUrl": null
+        },
+        {
+          "english": "anticipate",
+          "russian": "предвидеть",
+          "definition": "to expect something, or to prepare for something before it happens",
+          "example": "to anticipate a problem",
+          "imageUrl": null
+        },
+        {
+          "english": "writhe",
+          "russian": "корчиться",
+          "definition": "to make large twisting movements with the body",
+          "example": "The pain was so unbearable that he was writhing in agony.",
+          "imageUrl": null
+        },
+        {
+          "english": "salvation",
+          "russian": "спасение",
+          "definition": "(a way of) being saved from danger, loss, or harm",
+          "example": "After the diagnosis, getting to know Mary was his salvation",
+          "imageUrl": null
+        },
+        {
+          "english": "clench",
+          "russian": "сжимать",
+          "definition": "to close or hold something very tightly, often in a determined or angry way",
+          "example": " The old man clenched his fist and waved it angrily at us",
+          "imageUrl": null
+        },
+        {
+          "english": "resilient",
+          "russian": "жизнерадостный",
+          "definition": "able to be happy, successful, etc. again after something difficult or bad has happened",
+          "example": "She's a resilient girl - she won't be unhappy for long.",
+          "imageUrl": null
+        },
+        {
+          "english": "contemplate",
+          "russian": "намереваться",
+          "definition": "to spend time considering a possible future action, or to consider one particular thing for a long time in a serious and quiet way",
+          "example": "They were contemplating a move to California",
+          "imageUrl": null
+        },
+        {
+          "english": "billow",
+          "russian": "раздуваться",
+          "definition": "to spread over a large area, or (especially of things made of cloth) to become filled with air and appear to be larger",
+          "example": "We watched the boats with their billowing sails",
+          "imageUrl": null
+        },
+        {
+          "english": "exasperated",
+          "russian": "раздраженный",
+          "definition": "annoyed, especially because you can do nothing to solve a problem",
+          "example": "He's becoming increasingly exasperated with the situation",
+          "imageUrl": null
+        },
+        {
+          "english": "compassion",
+          "russian": "сострадание",
+          "definition": "a feeling of sympathy for people who are suffering",
+          "example": "I have great compassion for those who are struggling with mental health issues",
+          "imageUrl": null
+        },
+        {
+          "english": "disregard",
+          "russian": "равнодушие",
+          "definition": "behaviour that shows you do not care about or have any interest in someone or something",
+          "example": "His behaviour shows a total disregard for other people.",
+          "imageUrl": null
+        },
+        {
+          "english": "adjacent",
+          "russian": "примыкающий",
+          "definition": "If two things are adjacent, they are next to each other.",
+          "example": "They live in a house adjacent to the railway.",
+          "imageUrl": null
+        },
+        {
+          "english": "retain",
+          "russian": "удерживать",
+          "definition": "to keep or continue to have something:",
+          "example": "She has lost her battle to retain control of the company.",
+          "imageUrl": null
+        },
+        {
+          "english": "evaporate",
+          "russian": "испаряться",
+          "definition": "to cause a liquid to change to a gas, especially by heating:",
+          "example": "The high concentration of sugars forms a syrup when the sap evaporates.",
+          "imageUrl": null
+        },
+        {
+          "english": "avert",
+          "russian": "предотвращать",
+          "definition": "to prevent something bad from happening:",
+          "example": "to avert a crisis/conflict/strike/famine",
+          "imageUrl": null
+        },
+        {
+          "english": "raspy",
+          "russian": "скрипучий",
+          "definition": "A raspy voice sounds unpleasantly rough.",
+          "example": "I remember his raspy voice, his laugh, and my sense of gratitude that one of the founders of my adopted field was actually sitting here talking to me.",
+          "imageUrl": null
+        },
+        {
+          "english": "simmer",
+          "russian": "тушить",
+          "definition": "to gently cook a liquid or something with liquid in it so that it is very hot, but does not boil",
+          "example": "I like to simmer the rice until it absorbs all the water.",
+          "imageUrl": null
+        },
+        {
+          "english": "conceal",
+          "russian": "скрывать",
+          "definition": "to hide something",
+          "example": "She could barely conceal her irritation.",
+          "imageUrl": null
+        },
+        {
+          "english": "crutch",
+          "russian": "костыль",
+          "definition": "a stick that you put under your arm to help you walk if you have injured your leg or foot",
+          "example": "Charles was on crutches for six weeks.",
+          "imageUrl": null
+        },
+        {
+          "english": "dim",
+          "russian": "тусклый",
+          "definition": "not bright or clear",
+          "example": "He could hardly see her in the dim light.",
+          "imageUrl": null
+        },
+        {
+          "english": "grasping",
+          "russian": "жадный",
+          "definition": "wanting much more of something than you need, especially money\n",
+          "example": "a grasping, greedy man",
+          "imageUrl": null
+        },
+        {
+          "english": "concession",
+          "russian": "уступка",
+          "definition": "something that you agree to do or give to someone in order to end an argument",
+          "example": "Both sides will have to make concessions.",
+          "imageUrl": null
+        },
+        {
+          "english": "blare",
+          "russian": "греметь",
+          "definition": "to make an unpleasantly loud noise:\n",
+          "example": "The loudspeakers blared across the square.",
+          "imageUrl": null
+        },
+        {
+          "english": "scowl",
+          "russian": "хмуриться",
+          "definition": "to look at someone or something with a very annoyed expression:",
+          "example": "The boy scowled at her and reluctantly followed her back into school.",
+          "imageUrl": null
+        },
+        {
+          "english": "morph",
+          "russian": "превращаться",
+          "definition": "to gradually change, or change someone or something, from one thing to another",
+          "example": "morph into When someone brings up politics at a party, a casual conversation can quickly morph into an ugly argument.",
+          "imageUrl": null
+        },
+        {
+          "english": "probe",
+          "russian": "расспрашивать",
+          "definition": "to ask a lot of questions in order to discover information about something or someone",
+          "example": "The interviewer probed deep into her private life.",
+          "imageUrl": null
+        },
+        {
+          "english": "glossy",
+          "russian": "блестящий",
+          "definition": "smooth and shiny\n",
+          "example": "glossy hair",
+          "imageUrl": null
+        },
+        {
+          "english": "dainty",
+          "russian": "изящный",
+          "definition": "small, attractive, and delicate",
+          "example": "dainty feet",
+          "imageUrl": null
+        },
+        {
+          "english": "glimmer",
+          "russian": "проблеск надежды",
+          "definition": "a glimmer of happiness/hope, etc",
+          "example": "Whenever there has been a glimmer of light in the Syrian war, it has always been quickly extinguished.",
+          "imageUrl": null
+        },
+        {
+          "english": "obliterate",
+          "russian": "разрушать",
+          "definition": "to destroy something completely",
+          "example": "The town was obliterated by bombs",
+          "imageUrl": null
+        },
+        {
+          "english": "relish",
+          "russian": "получать удовольствие",
+          "definition": "to enjoy something",
+          "example": "I don't relish the thought of a twelve-hour flight",
+          "imageUrl": null
+        },
+        {
+          "english": "defy",
+          "russian": "игнорировать",
+          "definition": "to refuse to obey someone or something\n",
+          "example": "Some of these children openly defy their teachers",
+          "imageUrl": null
+        },
+        {
+          "english": "amplify",
+          "russian": "усиливать",
+          "definition": "to make a sound louder using electronic equipment",
+          "example": "You know how alcohol tends to amplify certain personality traits?",
+          "imageUrl": null
+        },
+        {
+          "english": "bleak",
+          "russian": "мрачный",
+          "definition": "If a situation is bleak, there is little or no hope for the future",
+          "example": "The future is looking bleak for small businesses struggling with debts",
+          "imageUrl": null
+        },
+        {
+          "english": "smother",
+          "russian": "душить",
+          "definition": "to kill someone by covering their face with something so that they cannot breathe",
+          "example": "I'm not gonna smother him.",
+          "imageUrl": null
+        },
+        {
+          "english": "welfare",
+          "russian": "благополучие",
+          "definition": "Someone's welfare is their health and happiness.",
+          "example": "He is concerned about the welfare of young men in prison",
+          "imageUrl": null
+        },
+        {
+          "english": "torment",
+          "russian": "мучить",
+          "definition": "to make someone suffer or worry a lot",
+          "example": "All evening the question tormented her",
+          "imageUrl": null
+        },
+        {
+          "english": "roam",
+          "russian": "скитаться",
+          "definition": "to move around a place without any purpose",
+          "example": "Gangs of youths roam the streets at night",
+          "imageUrl": null
+        }
+      ]
+    }
+  ]
+}

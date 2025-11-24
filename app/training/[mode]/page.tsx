@@ -44,7 +44,7 @@ async function getUserWords(userId: string): Promise<Word[]> {
         imageUrl: true,
         createdAt: true
       },
-      orderBy: { english: 'asc' }
+      orderBy: { createdAt: 'desc' }
     });
   } catch (error) {
     console.error('Database error:', error)

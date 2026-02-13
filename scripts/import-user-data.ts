@@ -1,15 +1,17 @@
+import "dotenv/config"
 import { PrismaClient } from "@prisma/client"
-import { withAccelerate } from "@prisma/extension-accelerate"
+import { PrismaPg } from "@prisma/adapter-pg"
 import fs from "fs/promises"
 
-// Продакшен PostgreSQL база с Accelerate
+const importDatabaseUrl = process.env.IMPORT_DATABASE_URL ?? process.env.DATABASE_URL
+
+if (!importDatabaseUrl) {
+  throw new Error("Set IMPORT_DATABASE_URL or DATABASE_URL to import user data")
+}
+
 const prodPrisma = new PrismaClient({
-  datasources: {
-    db: {
-      url: "prisma+postgres://accelerate.prisma-data.net/?api_key=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqd3RfaWQiOjEsInNlY3VyZV9rZXkiOiJza19NRFpZUEs2MjNNeWhlaWJOclNIbmIiLCJhcGlfa2V5IjoiMDFLOVQ3Qk04WENTREtYWURDSkowU1k1SEYiLCJ0ZW5hbnRfaWQiOiI2NmMwYWQ1MTI5MjcxZDBhMGJmM2ViMmU0MjE3Y2EzOTNmOTM3YTExZGRmOTFiMTJkMzAxZTE1YzUwMGJhZTcwIiwiaW50ZXJuYWxfc2VjcmV0IjoiNjIzNjk0MmYtMWZkMy00NzY3LWE4NzYtMGMxMmFhMTVkNGUxIn0.Mdyc0M-uv8xeEjt0JXFB8GCM-uHwdIZ-ggrvF7RTDgw"
-    }
-  }
-}).$extends(withAccelerate())
+  adapter: new PrismaPg({ connectionString: importDatabaseUrl }),
+})
 
 async function importUserData() {
   try {

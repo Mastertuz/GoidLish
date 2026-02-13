@@ -1,13 +1,16 @@
+import "dotenv/config"
 import { PrismaClient } from "@prisma/client"
+import { PrismaPg } from "@prisma/adapter-pg"
 import fs from "fs/promises"
 
-// Локальная SQLite база
+const exportDatabaseUrl = process.env.EXPORT_DATABASE_URL ?? process.env.DATABASE_URL
+
+if (!exportDatabaseUrl) {
+  throw new Error("Set EXPORT_DATABASE_URL or DATABASE_URL to export user data")
+}
+
 const localPrisma = new PrismaClient({
-  datasources: {
-    db: {
-      url: "file:./dev.db"
-    }
-  }
+  adapter: new PrismaPg({ connectionString: exportDatabaseUrl }),
 })
 
 async function exportUserData() {

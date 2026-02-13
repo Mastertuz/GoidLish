@@ -1,11 +1,9 @@
 
-import { PrismaAdapter } from "@auth/prisma-adapter";
 import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import { prisma } from "@/lib/prisma";
 import { schema } from "@/lib/schema";
 import bcrypt from "bcryptjs";
-const adapter = PrismaAdapter(prisma);
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
   // Временно отключаем adapter для использования JWT стратегии
@@ -67,7 +65,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     error: "/auth/login",
   },
   callbacks: {
-    async jwt({ token, user, account }) {
+    async jwt({ token, user }) {
       // Добавляем роль пользователя в токен
       if (user) {
         console.log("JWT callback - user data:", { id: user.id, role: user.role, email: user.email });

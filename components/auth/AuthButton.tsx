@@ -12,8 +12,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { LogIn, LogOut, Settings, User, Shield } from "lucide-react";
-import Link from "next/link";
+import { LogIn, LogOut, Settings, User } from "lucide-react";
 import AuthModal from "./AuthModal";
 
 interface AuthButtonProps {

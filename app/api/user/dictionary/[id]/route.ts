@@ -3,6 +3,9 @@ import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { z } from "zod";
 
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+
 const updateWordSchema = z.object({
   english: z.string().min(1, "Английское слово обязательно"),
   russian: z.string().min(1, "Перевод обязателен"),

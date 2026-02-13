@@ -6,7 +6,7 @@ import {
   CardHeader,
 } from "@/components/ui/card"
 import Link from "next/link"
-import { Play, Image } from "lucide-react"
+import { Play, Image as ImageIcon } from "lucide-react"
 
 function ImageModeCard() {
   return (
@@ -15,7 +15,7 @@ function ImageModeCard() {
         <div className="absolute inset-0 bg-linear-to-br from-purple-600/20 to-pink-600/20"></div>
         <div className="relative flex items-center justify-center p-4 md:p-8">
           <div className="bg-linear-to-br from-purple-500 to-pink-600 p-4 md:p-6 rounded-2xl shadow-lg">
-            <Image className="w-12 h-12 md:w-16 md:h-16 text-white" />
+            <ImageIcon className="w-12 h-12 md:w-16 md:h-16 text-white" />
           </div>
         </div>
       </CardHeader>

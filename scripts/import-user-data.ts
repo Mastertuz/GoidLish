@@ -1,4 +1,4 @@
-import "dotenv/config"
+﻿import "dotenv/config"
 import { PrismaClient } from "@prisma/client"
 import { PrismaPg } from "@prisma/adapter-pg"
 import fs from "fs/promises"
@@ -13,17 +13,42 @@ const prodPrisma = new PrismaClient({
   adapter: new PrismaPg({ connectionString: importDatabaseUrl }),
 })
 
+interface ExportWord {
+  english: string
+  russian?: string | null
+  definition?: string | null
+  example?: string | null
+  imageUrl?: string | null
+}
+
+interface ExportDictionary {
+  name: string
+  words: ExportWord[]
+}
+
+interface ExportUser {
+  email: string
+  name?: string | null
+  password?: string | null
+  role?: string | null
+}
+
+interface UserExport {
+  user: ExportUser
+  dictionaries: ExportDictionary[]
+}
+
 async function importUserData() {
   try {
     console.log('📖 Чтение данных из user-export.json...')
     
-    const data = JSON.parse(await fs.readFile('user-export.json', 'utf8'))
+    const data = JSON.parse(await fs.readFile('user-export.json', 'utf8')) as UserExport
     
     console.log(`👤 Импорт пользователя: ${data.user.email}`)
     console.log(`📚 Словарей: ${data.dictionaries.length}`)
     
     let totalWords = 0
-    data.dictionaries.forEach((dict: any) => {
+    data.dictionaries.forEach((dict) => {
       totalWords += dict.words.length
     })
     console.log(`📝 Всего слов: ${totalWords}`)

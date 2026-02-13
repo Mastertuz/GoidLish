@@ -30,7 +30,7 @@ export interface Session {
 }
 
 // Типы для API ответов
-export interface ApiResponse<T = any> {
+export interface ApiResponse<T = unknown> {
   data?: T;
   error?: string;
   message?: string;

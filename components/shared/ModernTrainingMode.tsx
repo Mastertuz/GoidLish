@@ -1,9 +1,10 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import Image from "next/image";
 import Link from "next/link";
 import { Home, BookOpen, ArrowLeft, ArrowRight, Volume2, RotateCcw, Trophy } from "lucide-react";
 import { Word } from "@/types";
@@ -47,6 +48,7 @@ export default function ModernTrainingMode({ mode, words, searchParams }: Modern
   const [answers, setAnswers] = useState<Answer[]>([]);
   const [isCompleted, setIsCompleted] = useState(false);
   const [showResult, setShowResult] = useState(false);
+  void searchParams;
 
   // Если нет слов для выбранного режима
   if (!words || words.length === 0) {
@@ -363,9 +365,12 @@ export default function ModernTrainingMode({ mode, words, searchParams }: Modern
               <div className="mb-4">
                 {mode === 'image' && currentWord.imageUrl ? (
                   <div className="mb-4">
-                    <img 
-                      src={currentWord.imageUrl} 
-                      alt="Word image" 
+                    <Image
+                      src={currentWord.imageUrl}
+                      alt="Word image"
+                      width={512}
+                      height={256}
+                      sizes="(max-width: 768px) 100vw, 512px"
                       className="max-w-full h-64 object-contain mx-auto rounded-lg"
                     />
                   </div>

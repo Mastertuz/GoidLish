@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+﻿import { NextRequest, NextResponse } from "next/server";
 import { writeFile, mkdir } from "fs/promises";
 import { join } from "path";
 
@@ -41,7 +41,7 @@ export async function POST(request: NextRequest) {
     const uploadsDir = join(process.cwd(), "public", "uploads");
     try {
       await mkdir(uploadsDir, { recursive: true });
-    } catch (error) {
+    } catch {
       // Папка уже существует
     }
 
@@ -61,3 +61,6 @@ export async function POST(request: NextRequest) {
     );
   }
 }
+
+
+

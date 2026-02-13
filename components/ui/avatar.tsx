@@ -41,6 +41,7 @@ export const AvatarImage = React.forwardRef<HTMLImageElement, AvatarImageProps>(
         alt={alt || ''}
         width={40}
         height={40}
+        ref={ref}
         {...props}
       />
     );

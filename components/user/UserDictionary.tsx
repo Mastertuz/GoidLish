@@ -1,6 +1,6 @@
-"use client";
+﻿"use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useSession } from "next-auth/react";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
@@ -73,12 +73,15 @@ export default function UserDictionary() {
   const [imagePreview, setImagePreview] = useState<string>("");
 
   // Загрузка слов пользователя
-  const fetchUserWords = async () => {
-    if (!session?.user?.id) return;
+  const fetchUserWords = useCallback(async () => {
+    if (!session) return;
     
     try {
       setIsLoading(true);
-      const response = await fetch("/api/user/dictionary");
+      const response = await fetch("/api/user/dictionary", {
+        cache: "no-store",
+        credentials: "include",
+      });
       if (response.ok) {
         const data = await response.json();
         setWords(data);
@@ -92,7 +95,7 @@ export default function UserDictionary() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [session]);
 
   // Поиск по словам
   useEffect(() => {
@@ -148,10 +151,10 @@ export default function UserDictionary() {
   };
 
   useEffect(() => {
-    if (session?.user?.id) {
+    if (session) {
       fetchUserWords();
     }
-  }, [session?.user?.id]);
+  }, [session, fetchUserWords]);
 
   // Обработка формы
   const handleSubmit = async (e: React.FormEvent) => {
@@ -537,7 +540,7 @@ export default function UserDictionary() {
                           <AlertDialogHeader>
                             <AlertDialogTitle className="text-white">Удалить слово</AlertDialogTitle>
                             <AlertDialogDescription className="text-slate-400">
-                              Вы уверены, что хотите удалить слово "<strong>{word.english}</strong>" из вашего словаря?
+                              Вы уверены, что хотите удалить слово &quot;<strong>{word.english}</strong>&quot; из вашего словаря?
                             </AlertDialogDescription>
                           </AlertDialogHeader>
                           <AlertDialogFooter>
@@ -564,3 +567,4 @@ export default function UserDictionary() {
     </div>
   );
 }
+

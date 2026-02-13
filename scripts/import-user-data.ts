@@ -109,10 +109,10 @@ async function importUserData() {
           await prodPrisma.word.create({
             data: {
               english: wordData.english,
-              russian: wordData.russian,
-              definition: wordData.definition,
-              example: wordData.example,
-              imageUrl: wordData.imageUrl,
+              russian: wordData.russian ?? "",
+              definition: wordData.definition ?? null,
+              example: wordData.example ?? null,
+              imageUrl: wordData.imageUrl ?? null,
               dictionaryId: dictionary.id
             }
           })

@@ -19,21 +19,12 @@ interface TrainingPageProps {
 
 async function getUserWords(userId: string): Promise<Word[]> {
   try {
-    // Получаем словарь пользователя
-    const dictionary = await prisma.dictionary.findFirst({
+    // Получаем слова из всех словарей пользователя
+    const words = await prisma.word.findMany({
       where: {
-        userId: userId
-      }
-    });
-
-    if (!dictionary) {
-      return [];
-    }
-
-    // Получаем слова из словаря пользователя
-    return await prisma.word.findMany({
-      where: {
-        dictionaryId: dictionary.id
+        dictionary: {
+          userId,
+        },
       },
       select: {
         id: true,
@@ -46,6 +37,15 @@ async function getUserWords(userId: string): Promise<Word[]> {
       },
       orderBy: { createdAt: 'desc' }
     });
+
+    return Array.from(
+      new Map(
+        words.map((word) => [
+          `${word.english.trim().toLowerCase()}||${word.russian.trim().toLowerCase()}`,
+          word,
+        ])
+      ).values()
+    );
   } catch (error) {
     console.error('Database error:', error)
     return []

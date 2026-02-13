@@ -23,26 +23,12 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Получаем или создаем словарь пользователя
-    let dictionary = await prisma.dictionary.findFirst({
-      where: {
-        userId: session.user.id,
-      }
-    });
-
-    if (!dictionary) {
-      dictionary = await prisma.dictionary.create({
-        data: {
-          userId: session.user.id,
-          name: `Словарь пользователя ${session.user.name || session.user.email}`
-        }
-      });
-    }
-
-    // Получаем слова из словаря пользователя
+    // Получаем слова из всех словарей пользователя
     const words = await prisma.word.findMany({
       where: {
-        dictionaryId: dictionary.id,
+        dictionary: {
+          userId: session.user.id,
+        },
       },
       orderBy: {
         createdAt: 'desc'
@@ -53,11 +39,21 @@ export async function GET(request: NextRequest) {
         russian: true,
         definition: true,
         example: true,
+        imageUrl: true,
         createdAt: true
       }
     });
 
-    return NextResponse.json(words);
+    const uniqueWords = Array.from(
+      new Map(
+        words.map((word) => [
+          `${word.english.trim().toLowerCase()}||${word.russian.trim().toLowerCase()}`,
+          word,
+        ])
+      ).values()
+    );
+
+    return NextResponse.json(uniqueWords);
   } catch (error) {
     console.error("Error fetching user dictionary:", error);
     return NextResponse.json(
@@ -82,10 +78,13 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const validatedData = createWordSchema.parse(body);
 
-    // Получаем или создаем словарь пользователя
+    // Получаем самый новый словарь пользователя или создаем новый
     let dictionary = await prisma.dictionary.findFirst({
       where: {
         userId: session.user.id,
+      },
+      orderBy: {
+        createdAt: 'desc'
       }
     });
 

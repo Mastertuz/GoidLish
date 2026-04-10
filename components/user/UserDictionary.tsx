@@ -1,6 +1,6 @@
 ﻿"use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { useSession } from "next-auth/react";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
@@ -57,24 +57,97 @@ const initialFormData: WordFormData = {
   imageUrl: ""
 };
 
-export default function UserDictionary() {
-  const { data: session } = useSession();
-  const [words, setWords] = useState<Word[]>([]);
-  const [filteredWords, setFilteredWords] = useState<Word[]>([]);
+interface UserDictionaryProps {
+  initialWords?: Word[];
+}
+
+export default function UserDictionary({ initialWords = [] }: UserDictionaryProps) {
+  const { data: session, status } = useSession();
+  const hasInitialWords = initialWords.length > 0;
+  const loadedForUserRef = useRef<string | null>(null);
+  const cachedWordsLoadedRef = useRef(false);
+  const [words, setWords] = useState<Word[]>(initialWords);
   const [searchTerm, setSearchTerm] = useState("");
-  const [isLoading, setIsLoading] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [isLoading, setIsLoading] = useState(initialWords.length === 0);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingWord, setEditingWord] = useState<Word | null>(null);
   const [formData, setFormData] = useState<WordFormData>(initialFormData);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const [sessionLoadingTimedOut, setSessionLoadingTimedOut] = useState(false);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string>("");
+  const pageSize = 50;
+  const hasVisibleWords = words.length > 0;
+
+  useEffect(() => {
+    if (status !== "loading" || hasVisibleWords) {
+      setSessionLoadingTimedOut(false);
+      return;
+    }
+
+    const timeoutId = setTimeout(() => {
+      setSessionLoadingTimedOut(true);
+      setIsLoading(false);
+      setError((prev) => prev || "Сессия загружается слишком долго. Обновите страницу");
+    }, 12000);
+
+    return () => clearTimeout(timeoutId);
+  }, [status, hasVisibleWords]);
+
+  useEffect(() => {
+    if (hasInitialWords) {
+      setWords(initialWords);
+      setIsLoading(false);
+      setError("");
+    }
+  }, [hasInitialWords, initialWords]);
+
+  const filteredWords = useMemo(() => {
+    const normalizedSearch = searchTerm.trim().toLowerCase();
+    if (!normalizedSearch) {
+      return words;
+    }
+
+    return words.filter((word) =>
+      word.english.toLowerCase().includes(normalizedSearch) ||
+      word.russian.toLowerCase().includes(normalizedSearch)
+    );
+  }, [searchTerm, words]);
+
+  const totalPages = Math.max(1, Math.ceil(filteredWords.length / pageSize));
+  const safeCurrentPage = Math.min(currentPage, totalPages);
+
+  const paginatedWords = useMemo(() => {
+    const startIndex = (safeCurrentPage - 1) * pageSize;
+    return filteredWords.slice(startIndex, startIndex + pageSize);
+  }, [filteredWords, safeCurrentPage]);
+
+  const dictionaryStats = useMemo(() => {
+    let withDefinition = 0;
+    let withExample = 0;
+
+    for (const word of words) {
+      if (word.definition && word.definition.trim()) {
+        withDefinition += 1;
+      }
+      if (word.example && word.example.trim()) {
+        withExample += 1;
+      }
+    }
+
+    return {
+      total: words.length,
+      withDefinition,
+      withExample,
+    };
+  }, [words]);
 
   // Загрузка слов пользователя
   const fetchUserWords = useCallback(async () => {
-    if (!session) return;
+    if (!session?.user?.id) return;
     
     try {
       setIsLoading(true);
@@ -85,30 +158,45 @@ export default function UserDictionary() {
       if (response.ok) {
         const data = await response.json();
         setWords(data);
-        setFilteredWords(data);
+        setError("");
+        localStorage.setItem(`dictionary-cache:${session.user.id}`, JSON.stringify(data));
       } else {
-        setError("Ошибка при загрузке словаря");
+        const payload = await response.json().catch(() => null);
+        const cachedWords = localStorage.getItem(`dictionary-cache:${session.user.id}`);
+        if (cachedWords) {
+          try {
+            const parsed = JSON.parse(cachedWords) as Word[];
+            if (Array.isArray(parsed) && parsed.length > 0) {
+              setWords(parsed);
+            }
+          } catch {
+            // Ignore malformed cached payload.
+          }
+        }
+        setError(payload?.error || "Ошибка при загрузке словаря");
       }
     } catch (error) {
       console.error("Error fetching user words:", error);
+      const cachedWords = localStorage.getItem(`dictionary-cache:${session.user.id}`);
+      if (cachedWords) {
+        try {
+          const parsed = JSON.parse(cachedWords) as Word[];
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            setWords(parsed);
+          }
+        } catch {
+          // Ignore malformed cached payload.
+        }
+      }
       setError("Ошибка при загрузке словаря");
     } finally {
       setIsLoading(false);
     }
-  }, [session]);
+  }, [session?.user?.id]);
 
-  // Поиск по словам
   useEffect(() => {
-    if (searchTerm) {
-      const filtered = words.filter(word =>
-        word.english.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        word.russian.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-      setFilteredWords(filtered);
-    } else {
-      setFilteredWords(words);
-    }
-  }, [searchTerm, words]);
+    setCurrentPage(1);
+  }, [searchTerm]);
 
   // Функции для работы с изображениями
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -151,10 +239,50 @@ export default function UserDictionary() {
   };
 
   useEffect(() => {
-    if (session) {
-      fetchUserWords();
+    if (status === "unauthenticated") {
+      setIsLoading(false);
+      loadedForUserRef.current = null;
+      return;
     }
-  }, [session, fetchUserWords]);
+
+    const currentUserId = session?.user?.id;
+    if (!currentUserId) {
+      if (status === "authenticated") {
+        setIsLoading(false);
+        setError("Сессия повреждена. Перезайдите в аккаунт");
+      }
+      loadedForUserRef.current = null;
+      return;
+    }
+
+    if (hasInitialWords) {
+      loadedForUserRef.current = currentUserId;
+      return;
+    }
+
+    if (!cachedWordsLoadedRef.current) {
+      const cachedWords = localStorage.getItem(`dictionary-cache:${currentUserId}`);
+      if (cachedWords) {
+        try {
+          const parsed = JSON.parse(cachedWords) as Word[];
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            setWords(parsed);
+            setIsLoading(false);
+          }
+        } catch {
+          // Ignore malformed cached payload.
+        }
+      }
+      cachedWordsLoadedRef.current = true;
+    }
+
+    if (loadedForUserRef.current === currentUserId) {
+      return;
+    }
+
+    loadedForUserRef.current = currentUserId;
+    fetchUserWords();
+  }, [session?.user?.id, status, fetchUserWords, hasInitialWords]);
 
   // Обработка формы
   const handleSubmit = async (e: React.FormEvent) => {
@@ -194,7 +322,7 @@ export default function UserDictionary() {
 
       if (response.ok) {
         if (editingWord) {
-          setWords(words.map(w => w.id === editingWord.id ? data : w));
+          setWords(words.map((w) => (w.id === editingWord.id ? data : w)));
           setSuccess("Слово обновлено!");
         } else {
           setWords([data, ...words]);
@@ -225,7 +353,7 @@ export default function UserDictionary() {
       });
 
       if (response.ok) {
-        setWords(words.filter(word => word.id !== id));
+        setWords(words.filter((word) => word.id !== id));
         setSuccess("Слово удалено из словаря!");
         setTimeout(() => setSuccess(""), 3000);
       } else {
@@ -261,7 +389,17 @@ export default function UserDictionary() {
     setIsDialogOpen(true);
   };
 
-  if (!session) {
+  if (status === "loading" && !hasVisibleWords && !sessionLoadingTimedOut) {
+    return (
+      <div className="bg-slate-800 rounded-lg border border-slate-700 p-8">
+        <div className="flex items-center justify-center">
+          <div className="text-lg text-slate-300">Проверка сессии...</div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!session && !hasVisibleWords) {
     return (
       <div className="bg-slate-800 rounded-lg border border-slate-700 p-8">
         <div className="flex items-center justify-center">
@@ -271,7 +409,7 @@ export default function UserDictionary() {
     );
   }
 
-  if (isLoading) {
+  if (isLoading && !hasVisibleWords) {
     return (
       <div className="bg-slate-800 rounded-lg border border-slate-700 p-8">
         <div className="flex items-center justify-center">
@@ -466,20 +604,26 @@ export default function UserDictionary() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div className="bg-slate-800 p-4 rounded-lg border border-slate-700">
           <h3 className="text-sm font-medium text-slate-400">Всего слов</h3>
-          <p className="text-2xl font-bold text-white">{words.length}</p>
+          <p className="text-2xl font-bold text-white">{dictionaryStats.total}</p>
         </div>
         <div className="bg-slate-800 p-4 rounded-lg border border-slate-700">
           <h3 className="text-sm font-medium text-slate-400">С определениями</h3>
-          <p className="text-2xl font-bold text-white">
-            {words.filter(w => w.definition).length}
-          </p>
+          <p className="text-2xl font-bold text-white">{dictionaryStats.withDefinition}</p>
         </div>
         <div className="bg-slate-800 p-4 rounded-lg border border-slate-700">
           <h3 className="text-sm font-medium text-slate-400">С примерами</h3>
-          <p className="text-2xl font-bold text-white">
-            {words.filter(w => w.example).length}
-          </p>
+          <p className="text-2xl font-bold text-white">{dictionaryStats.withExample}</p>
         </div>
+      </div>
+
+      <div className="flex items-center justify-between text-sm text-slate-400">
+        <span>
+          Показано {paginatedWords.length} из {filteredWords.length}
+          {searchTerm.trim() ? ` (найдено по запросу)` : ""}
+        </span>
+        <span>
+          Страница {safeCurrentPage} из {totalPages}
+        </span>
       </div>
 
       {/* Таблица слов */}
@@ -502,7 +646,7 @@ export default function UserDictionary() {
                 </TableCell>
               </TableRow>
             ) : (
-              filteredWords.map((word) => (
+              paginatedWords.map((word) => (
                 <TableRow key={word.id} className="border-slate-700 hover:bg-slate-750">
                   <TableCell className="font-medium text-white">{word.english}</TableCell>
                   <TableCell className="text-slate-300">{word.russian}</TableCell>
@@ -564,6 +708,31 @@ export default function UserDictionary() {
           </TableBody>
         </Table>
       </div>
+
+      {filteredWords.length > pageSize && (
+        <div className="flex items-center justify-end gap-2">
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            disabled={safeCurrentPage <= 1}
+            onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
+            className="border-slate-600 text-slate-300 hover:bg-slate-700 hover:text-white"
+          >
+            Назад
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            disabled={safeCurrentPage >= totalPages}
+            onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
+            className="border-slate-600 text-slate-300 hover:bg-slate-700 hover:text-white"
+          >
+            Вперед
+          </Button>
+        </div>
+      )}
     </div>
   );
 }

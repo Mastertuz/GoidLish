@@ -80,6 +80,7 @@ model Dictionary {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
+  @@index([userId])
   @@map("dictionaries")
 }
 
@@ -97,5 +98,6 @@ model Word {
   dictionaryId String
   dictionary   Dictionary @relation(fields: [dictionaryId], references: [id], onDelete: Cascade)
 
+  @@index([dictionaryId, createdAt])
   @@map("words")
 }

@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "next dev -H localhost -p 3000",
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
@@ -53,6 +53,7 @@
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
+    "@types/pg": "^8.20.0",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "baseline-browser-mapping": "^2.9.19",

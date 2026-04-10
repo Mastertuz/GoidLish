@@ -44,9 +44,4 @@ async function testAuth() {
   }
 }
 
-// Запускаем тест при загрузке
-if (typeof window !== 'undefined') {
-  testAuth();
-}
-
 export { testAuth };

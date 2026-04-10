@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { signIn } from "next-auth/react";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -16,6 +17,7 @@ interface AuthModalProps {
 }
 
 export default function AuthModal({ open, onOpenChange }: AuthModalProps) {
+  const router = useRouter();
   const [loginEmail, setLoginEmail] = useState("");
   const [loginPassword, setLoginPassword] = useState("");
   const [registerName, setRegisterName] = useState("");
@@ -50,21 +52,34 @@ export default function AuthModal({ open, onOpenChange }: AuthModalProps) {
     setError("");
 
     try {
+      await fetch("/api/auth/csrf", { cache: "no-store", credentials: "include" });
+
       const result = await signIn("credentials", {
         email: loginEmail,
         password: loginPassword,
         redirect: false,
       });
 
+      if (!result) {
+        setError("Сессия устарела. Обновите страницу и попробуйте снова");
+        return;
+      }
+
       if (result?.error) {
         setError(result.error === "CredentialsSignin" ? "Неверный email или пароль" : "Ошибка при входе");
       } else if (result?.ok) {
         setSuccess("Вход выполнен успешно!");
         handleClose();
-        setTimeout(() => window.location.reload(), 500);
+        router.refresh();
+      } else {
+        setError("Не удалось выполнить вход. Попробуйте снова");
       }
-    } catch {
-      setError("Произошла ошибка при входе");
+    } catch (error) {
+      if (error instanceof Error && error.message.includes("CSRF")) {
+        setError("Сессия устарела. Обновите страницу и попробуйте снова");
+      } else {
+        setError("Произошла ошибка при входе");
+      }
     } finally {
       setIsLoading(false);
     }
@@ -99,15 +114,24 @@ export default function AuthModal({ open, onOpenChange }: AuthModalProps) {
 
       if (response.ok) {
         setSuccess("Аккаунт создан! Выполняем вход...");
+        await fetch("/api/auth/csrf", { cache: "no-store", credentials: "include" });
+
         const loginResult = await signIn("credentials", {
           email: registerEmail,
           password: registerPassword,
           redirect: false,
         });
 
+        if (!loginResult) {
+          setError("Сессия устарела. Обновите страницу и попробуйте снова");
+          setActiveTab("login");
+          setLoginEmail(registerEmail);
+          return;
+        }
+
         if (loginResult?.ok) {
           handleClose();
-          window.location.reload();
+          router.refresh();
         } else {
           setError("Ошибка входа после регистрации");
           setActiveTab("login");
@@ -116,8 +140,12 @@ export default function AuthModal({ open, onOpenChange }: AuthModalProps) {
       } else {
         setError(data.error || "Произошла ошибка при регистрации");
       }
-    } catch {
-      setError("Произошла ошибка при регистрации");
+    } catch (error) {
+      if (error instanceof Error && error.message.includes("CSRF")) {
+        setError("Сессия устарела. Обновите страницу и попробуйте снова");
+      } else {
+        setError("Произошла ошибка при регистрации");
+      }
     } finally {
       setIsLoading(false);
     }
@@ -196,7 +224,7 @@ export default function AuthModal({ open, onOpenChange }: AuthModalProps) {
 
               <Button
                 type="submit"
-                className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-medium"
+                className="w-full bg-linear-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-medium"
                 disabled={isLoading}
               >
                 {isLoading ? "Вхожу..." : "Войти"}
@@ -272,7 +300,7 @@ export default function AuthModal({ open, onOpenChange }: AuthModalProps) {
 
               <Button
                 type="submit"
-                className="w-full bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700 text-white font-medium"
+                className="w-full bg-linear-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700 text-white font-medium"
                 disabled={isLoading}
               >
                 {isLoading ? "Регистрируем..." : "Зарегистрироваться"}

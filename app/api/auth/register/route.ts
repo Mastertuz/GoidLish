@@ -11,17 +11,8 @@ const registerSchema = z.object({
 
 export async function POST(request: NextRequest) {
   try {
-    console.log('=== Registration attempt ===');
-    
     const body = await request.json();
-    console.log('Request body received:', { ...body, password: '[HIDDEN]' });
-    
     const validatedData = registerSchema.parse(body);
-    console.log('Data validated successfully');
-
-    // Проверяем подключение к БД
-    await prisma.$connect();
-    console.log('Database connected successfully');
 
     // Проверяем, существует ли пользователь
     const existingUser = await prisma.user.findUnique({
@@ -29,7 +20,6 @@ export async function POST(request: NextRequest) {
         email: validatedData.email,
       },
     });
-    console.log('Existing user check:', existingUser ? 'User exists' : 'User not found');
 
     if (existingUser) {
       return NextResponse.json(
@@ -39,7 +29,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Хешируем пароль
-    const hashedPassword = await bcrypt.hash(validatedData.password, 12);
+    const hashedPassword = await bcrypt.hash(validatedData.password, 10);
 
     // Создаем пользователя
     const user = await prisma.user.create({
@@ -64,9 +54,6 @@ export async function POST(request: NextRequest) {
     );
   } catch (error) {
     console.error("Registration error:", error);
-    
-    // Закрываем соединение при ошибке
-    await prisma.$disconnect();
 
     if (error instanceof z.ZodError) {
       return NextResponse.json(

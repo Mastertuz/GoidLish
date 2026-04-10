@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -42,71 +42,135 @@ const modeDescriptions = {
   image: 'Изучайте слова с помощью изображений'
 };
 
+const shuffleWords = (sourceWords: Word[]) => {
+  const shuffled = [...sourceWords];
+
+  for (let index = shuffled.length - 1; index > 0; index -= 1) {
+    const randomIndex = Math.floor(Math.random() * (index + 1));
+    [shuffled[index], shuffled[randomIndex]] = [shuffled[randomIndex], shuffled[index]];
+  }
+
+  return shuffled;
+};
+
+const escapeRegExp = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+const buildWordVariants = (word: string) => {
+  const normalizedWord = word.trim().toLowerCase();
+
+  if (!normalizedWord) {
+    return [];
+  }
+
+  const variants = new Set<string>([
+    normalizedWord,
+    `${normalizedWord}s`,
+    `${normalizedWord}es`,
+    `${normalizedWord}ed`,
+    `${normalizedWord}ing`,
+  ]);
+
+  if (normalizedWord.endsWith("e")) {
+    const stemWithoutE = normalizedWord.slice(0, -1);
+    variants.add(`${stemWithoutE}ing`);
+    variants.add(`${normalizedWord}d`);
+  }
+
+  if (normalizedWord.endsWith("y") && normalizedWord.length > 1) {
+    const stemWithoutY = normalizedWord.slice(0, -1);
+    variants.add(`${stemWithoutY}ies`);
+    variants.add(`${stemWithoutY}ied`);
+  }
+
+  if (/[aeiou][^aeiouywx]$/.test(normalizedWord)) {
+    const lastLetter = normalizedWord.slice(-1);
+    variants.add(`${normalizedWord}${lastLetter}ed`);
+    variants.add(`${normalizedWord}${lastLetter}ing`);
+  }
+
+  return Array.from(variants).sort((first, second) => second.length - first.length);
+};
+
+const getMaskedVariant = (matchedWord: string, targetWord: string) => {
+  const normalizedMatchedWord = matchedWord.toLowerCase();
+  const normalizedTargetWord = targetWord.trim().toLowerCase();
+
+  if (!normalizedTargetWord || normalizedMatchedWord === normalizedTargetWord) {
+    return "_____";
+  }
+
+  const variantSuffixes = ["ing", "ied", "ies", "ed", "es", "s", "d"];
+  for (const suffix of variantSuffixes) {
+    if (normalizedMatchedWord.endsWith(suffix)) {
+      return `_____${suffix}`;
+    }
+  }
+
+  return "_____";
+};
+
+const createMaskedExample = (example: string, targetWord: string) => {
+  const variants = buildWordVariants(targetWord);
+
+  if (!variants.length) {
+    return example;
+  }
+
+  const pattern = new RegExp(`\\b(?:${variants.map(escapeRegExp).join("|")})\\b`, "gi");
+  const replacedExample = example.replace(pattern, (matchedWord) => getMaskedVariant(matchedWord, targetWord));
+
+  if (replacedExample !== example) {
+    return replacedExample;
+  }
+
+  const fallbackPrefix = targetWord.trim().toLowerCase().slice(0, 5);
+
+  if (!fallbackPrefix) {
+    return example;
+  }
+
+  const parts = example.split(/(\s+)/);
+  let wasReplaced = false;
+
+  return parts
+    .map((part) => {
+      if (wasReplaced) {
+        return part;
+      }
+
+      const cleanPart = part.replace(/^[^a-zA-Z]+|[^a-zA-Z]+$/g, "");
+      if (!cleanPart) {
+        return part;
+      }
+
+      if (cleanPart.toLowerCase().startsWith(fallbackPrefix)) {
+        wasReplaced = true;
+        return part.replace(cleanPart, "_____");
+      }
+
+      return part;
+    })
+    .join("");
+};
+
+  const normalizeAnswer = (value: string) => value.toLowerCase().trim();
+
 export default function ModernTrainingMode({ mode, words, searchParams }: ModernTrainingModeProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [userAnswer, setUserAnswer] = useState("");
   const [answers, setAnswers] = useState<Answer[]>([]);
   const [isCompleted, setIsCompleted] = useState(false);
   const [showResult, setShowResult] = useState(false);
+  const [shuffledWords, setShuffledWords] = useState<Word[]>(() => shuffleWords(words));
   void searchParams;
 
-  // Если нет слов для выбранного режима
-  if (!words || words.length === 0) {
-    let emptyMessage = "В вашем словаре нет слов для этого режима тренировки.";
-    
-    if (mode === 'definition') {
-      emptyMessage = "Для режима 'Определения' нужны слова с заполненным полем 'Определение'.";
-    } else if (mode === 'gapfill') {
-      emptyMessage = "Для режима 'Заполни пропуски' нужны слова с примерами предложений.";
-    } else if (mode === 'image') {
-      emptyMessage = "Для режима 'Картинки' нужны слова с загруженными изображениями.";
-    } else {
-      emptyMessage = "В вашем словаре нет слов для тренировки.";
-    }
+  useEffect(() => {
+    setShuffledWords(shuffleWords(words));
+  }, [words]);
 
-    return (
-      <div className="min-h-screen bg-linear-to-br from-slate-950 via-slate-900 to-slate-950 flex items-center justify-center p-4">
-        <div className="w-full max-w-md">
-          <Card className="bg-slate-800 border-slate-700 text-white shadow-2xl">
-            <CardHeader className="text-center pb-4">
-              <div className="mx-auto mb-6 w-16 h-16 bg-orange-500/20 rounded-full flex items-center justify-center">
-                <BookOpen className="w-8 h-8 text-orange-400" />
-              </div>
-              <CardTitle className="text-2xl text-slate-100 mb-2">
-                {modeNames[mode as keyof typeof modeNames] || 'Тренировка'}
-              </CardTitle>
-              <p className="text-slate-400 text-sm">
-                {modeDescriptions[mode as keyof typeof modeDescriptions]}
-              </p>
-            </CardHeader>
-            <CardContent className="text-center space-y-6 pt-2">
-              <div className="bg-slate-900/50 rounded-lg p-4 border border-slate-700">
-                <p className="text-slate-300 text-sm leading-relaxed mb-3">
-                  {emptyMessage}
-                </p>
-                <p className="text-slate-500 text-xs">
-                  Добавьте слова в свой словарь, чтобы начать тренировку.
-                </p>
-              </div>
-              <div className="flex flex-col gap-3 pt-2">
-                <Link href="/">
-                  <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2.5 transition-colors">
-                    <Home className="w-4 h-4 mr-2" />
-                    Перейти к словарю
-                  </Button>
-                </Link>
-                <Link href="/">
-                  <Button variant="outline" className="w-full border-slate-600 text-slate-300 hover:bg-slate-700 hover:text-white transition-colors">
-                    Вернуться на главную
-                  </Button>
-                </Link>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
-    );
-  }
+  const wordsById = useMemo(() => {
+    return new Map(shuffledWords.map((word) => [word.id, word]));
+  }, [shuffledWords]);
 
   // Если нет слов для выбранного режима
   if (!words || words.length === 0) {
@@ -166,7 +230,7 @@ export default function ModernTrainingMode({ mode, words, searchParams }: Modern
     );
   }
 
-  const currentWord = words[currentIndex];
+  const currentWord = shuffledWords[currentIndex];
 
   // Генерация вопроса в зависимости от режима
   const getQuestion = () => {
@@ -174,9 +238,9 @@ export default function ModernTrainingMode({ mode, words, searchParams }: Modern
       case 'definition':
         return currentWord.definition || 'Определение не найдено';
       case 'gapfill':
-        // Создаем предложение с пропуском (заменяем английское слово на _____)
+        // Создаем предложение с пропуском (заменяем английское слово и его формы на _____)
         if (currentWord.example) {
-          return currentWord.example.replace(new RegExp(currentWord.english, 'gi'), '_____');
+          return createMaskedExample(currentWord.example, currentWord.english);
         }
         return 'Пример предложения не найден';
       case 'image':
@@ -231,7 +295,12 @@ export default function ModernTrainingMode({ mode, words, searchParams }: Modern
     if (!userAnswer.trim()) return;
 
     const correctAnswer = getCorrectAnswer();
-    const isCorrect = userAnswer.toLowerCase().trim() === correctAnswer.toLowerCase().trim();
+    const normalizedUserAnswer = normalizeAnswer(userAnswer);
+    const normalizedCorrectAnswer = normalizeAnswer(correctAnswer);
+    const acceptedGapfillAnswers = new Set(buildWordVariants(normalizedCorrectAnswer));
+    const isCorrect = mode === 'gapfill'
+      ? acceptedGapfillAnswers.has(normalizedUserAnswer)
+      : normalizedUserAnswer === normalizedCorrectAnswer;
     const answer: Answer = {
       wordId: currentWord.id,
       userAnswer: userAnswer,
@@ -239,7 +308,7 @@ export default function ModernTrainingMode({ mode, words, searchParams }: Modern
       isCorrect
     };
 
-    setAnswers([...answers, answer]);
+    setAnswers((previousAnswers) => [...previousAnswers, answer]);
     setShowResult(true);
   };
 
@@ -248,7 +317,7 @@ export default function ModernTrainingMode({ mode, words, searchParams }: Modern
     setShowResult(false);
     setUserAnswer("");
     
-    if (currentIndex + 1 >= words.length) {
+    if (currentIndex + 1 >= shuffledWords.length) {
       setIsCompleted(true);
     } else {
       setCurrentIndex(currentIndex + 1);
@@ -262,6 +331,7 @@ export default function ModernTrainingMode({ mode, words, searchParams }: Modern
     setAnswers([]);
     setIsCompleted(false);
     setShowResult(false);
+    setShuffledWords(shuffleWords(words));
   };
 
   // Показ статистики
@@ -294,7 +364,9 @@ export default function ModernTrainingMode({ mode, words, searchParams }: Modern
                           {index + 1}
                         </div>
                         <div>
-                          <p className="text-slate-200 font-medium">{words[index].english}</p>
+                          <p className="text-slate-200 font-medium">
+                            {wordsById.get(answer.wordId)?.english || answer.correctAnswer}
+                          </p>
                           <p className="text-slate-400 text-sm">
                             {answer.isCorrect ? answer.userAnswer : `${answer.userAnswer} → ${answer.correctAnswer}`}
                           </p>
@@ -351,11 +423,11 @@ export default function ModernTrainingMode({ mode, words, searchParams }: Modern
             <div className="bg-slate-800 rounded-full h-2 mb-2">
               <div 
                 className="bg-blue-500 h-2 rounded-full transition-all duration-300"
-                style={{ width: `${((currentIndex + 1) / words.length) * 100}%` }}
+                style={{ width: `${((currentIndex + 1) / shuffledWords.length) * 100}%` }}
               ></div>
             </div>
             <p className="text-slate-400 text-sm">
-              Слово {currentIndex + 1} из {words.length}
+              Слово {currentIndex + 1} из {shuffledWords.length}
             </p>
           </div>
 
@@ -443,7 +515,7 @@ export default function ModernTrainingMode({ mode, words, searchParams }: Modern
                     onClick={nextWord}
                     className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3"
                   >
-                    {currentIndex + 1 >= words.length ? 'Завершить тренировку' : 'Следующее слово'}
+                    {currentIndex + 1 >= shuffledWords.length ? 'Завершить тренировку' : 'Следующее слово'}
                     <ArrowRight className="w-4 h-4 ml-2" />
                   </Button>
                 </div>

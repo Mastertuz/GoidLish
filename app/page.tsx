@@ -5,9 +5,9 @@ import ImageModeCard from "@/components/shared/training-modes/image-mode";
 import AuthButton from "@/components/auth/AuthButton";
 import UserDictionary from "@/components/user/UserDictionary";
 
-export default function Home() {
+export default async function Home() {
   return (
-    <main className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
+    <main className="min-h-screen bg-linear-to-br from-slate-950 via-slate-900 to-slate-950">
       <div className="container mx-auto px-4 py-8 lg:py-12">
         {/* Header */}
         <header className="flex flex-col lg:flex-row justify-between items-center gap-8 mb-16">

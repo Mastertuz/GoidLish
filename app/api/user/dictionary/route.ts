@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
+import { getCachedUserWords, invalidateCachedUserWords, setCachedUserWords } from "@/lib/user-words-cache";
 import { z } from "zod";
 import fs from "fs/promises";
 import path from "path";
@@ -13,9 +14,6 @@ const createWordSchema = z.object({
   imageUrl: z.string().optional(),
 });
 
-const normalizeWordKeyPart = (value: unknown) =>
-  typeof value === "string" ? value.trim().toLowerCase() : "";
-
 const getErrorMessage = (error: unknown) =>
   error instanceof Error ? error.message.toLowerCase() : "";
 
@@ -25,7 +23,9 @@ const isTransientConnectionError = (error: unknown) => {
     message.includes("connection terminated unexpectedly") ||
     message.includes("server closed the connection") ||
     message.includes("terminating connection") ||
-    message.includes("socket hang up")
+    message.includes("socket hang up") ||
+    message.includes("query read timeout") ||
+    message.includes("timeout exceeded")
   );
 };
 
@@ -50,7 +50,9 @@ const looksLikeDatabaseConnectorError = (error: unknown) => {
   return (
     message.includes("error querying the database") ||
     message.includes("connector error") ||
-    message.includes("connection")
+    message.includes("connection") ||
+    message.includes("query read timeout") ||
+    message.includes("timeout")
   );
 };
 
@@ -65,9 +67,6 @@ type DictionaryWord = {
   imageUrl: string | null;
   createdAt: Date;
 };
-
-const userDictionaryCache = new Map<string, { words: DictionaryWord[]; updatedAt: number }>();
-const CACHE_TTL_MS = 2 * 60 * 1000;
 
 type BackupExport = {
   user?: {
@@ -85,20 +84,21 @@ type BackupExport = {
 };
 
 async function loadWordsFromBackupFile(userEmail?: string | null) {
-  if (!userEmail) {
-    return [];
-  }
-
   try {
     const backupPath = path.join(process.cwd(), "user-export.json");
     const raw = await fs.readFile(backupPath, "utf8");
     const parsed = JSON.parse(raw) as BackupExport;
 
-    if (!parsed?.user?.email || parsed.user.email.toLowerCase() !== userEmail.toLowerCase()) {
-      return [];
-    }
+    const hasMatchingEmail =
+      Boolean(userEmail) &&
+      Boolean(parsed?.user?.email) &&
+      parsed.user!.email!.toLowerCase() === userEmail!.toLowerCase();
 
     const backupWords = (parsed.dictionaries ?? []).flatMap((dictionary) => dictionary.words ?? []);
+
+    if (!hasMatchingEmail) {
+      console.warn("Dictionary fallback: using backup words without strict email match");
+    }
 
     return backupWords
       .filter((word) => typeof word.english === "string" && typeof word.russian === "string")
@@ -118,7 +118,7 @@ async function loadWordsFromBackupFile(userEmail?: string | null) {
 }
 
 async function findUserWordsWithRetry(userId: string) {
-  const maxAttempts = 4;
+  const maxAttempts = 2;
 
   for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
     try {
@@ -136,9 +136,6 @@ async function findUserWordsWithRetry(userId: string) {
         where: {
           dictionaryId: { in: dictionaryIds },
         },
-        orderBy: {
-          createdAt: "desc",
-        },
         select: {
           id: true,
           english: true,
@@ -153,7 +150,7 @@ async function findUserWordsWithRetry(userId: string) {
       if (!isConnectionLimitError(error) || attempt === maxAttempts) {
         throw error;
       }
-      await sleep(150 * attempt);
+      await sleep(100 * attempt);
     }
   }
 
@@ -189,22 +186,17 @@ export async function GET() {
       );
     }
 
+    const cachedWords = getCachedUserWords<DictionaryWord[]>(session.user.id);
+    if (cachedWords) {
+      return NextResponse.json(cachedWords);
+    }
+
     // Основной источник: Prisma (из БД) с увеличенным timeout и ретраями
     const words = await findUserWordsWithRetry(session.user.id);
 
-    const uniqueWords = Array.from(
-      new Map(
-        words.map((word) => [
-          `${normalizeWordKeyPart(word.english)}||${normalizeWordKeyPart(word.russian)}`,
-          word,
-        ])
-      ).values()
-    );
+    const uniqueWords = words;
 
-    userDictionaryCache.set(session.user.id, {
-      words: uniqueWords,
-      updatedAt: Date.now(),
-    });
+    setCachedUserWords(session.user.id, uniqueWords);
 
     return NextResponse.json(uniqueWords);
   } catch (error) {
@@ -214,10 +206,10 @@ export async function GET() {
       const userId = session?.user?.id;
 
       if (userId) {
-        const cached = userDictionaryCache.get(userId);
-        if (cached && Date.now() - cached.updatedAt <= CACHE_TTL_MS) {
-          console.warn(`Dictionary fallback: returning ${cached.words.length} cached words`);
-          return NextResponse.json(cached.words);
+        const cached = getCachedUserWords<DictionaryWord[]>(userId);
+        if (cached) {
+          console.warn(`Dictionary fallback: returning ${cached.length} cached words`);
+          return NextResponse.json(cached);
         }
       }
 
@@ -298,7 +290,7 @@ export async function POST(request: NextRequest) {
       });
     });
 
-    userDictionaryCache.delete(session.user.id);
+    invalidateCachedUserWords(session.user.id);
 
     return NextResponse.json(word, { status: 201 });
   } catch (error) {

@@ -24,6 +24,10 @@ const pool =
     connectionString: runtimeDatabaseUrl,
     max: 10,
     connectionTimeoutMillis: 4_000,
+    query_timeout: 8_000,
+    statement_timeout: 8_000,
+    idle_in_transaction_session_timeout: 8_000,
+    keepAlive: true,
     idleTimeoutMillis: 5_000,
     allowExitOnIdle: true,
   })

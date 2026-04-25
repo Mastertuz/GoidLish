@@ -7,6 +7,10 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
+    "db:import:xlsx": "tsx scripts/import-words-xlsx.ts",
+    "db:import:xlsx:full": "tsx scripts/import-and-fill-xlsx.ts",
+    "db:import:xlsx:10": "tsx scripts/import-and-fill-xlsx.ts --limit 10 --skip-fill",
+    "db:fill:missing": "tsx scripts/fill-missing-word-fields.ts",
     "db:seed": "tsx prisma/seed.ts",
     "db:migrate:deploy": "prisma migrate deploy",
     "db:generate": "prisma generate",
@@ -48,6 +52,7 @@
     "tailwind-merge": "^3.4.0",
     "uploadthing": "^7.7.4",
     "uuid": "^13.0.0",
+    "xlsx": "^0.18.5",
     "zod": "^4.1.12"
   },
   "devDependencies": {

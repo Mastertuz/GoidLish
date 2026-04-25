@@ -53,6 +53,22 @@ const shuffleWords = (sourceWords: Word[]) => {
   return shuffled;
 };
 
+const dedupeWords = (sourceWords: Word[]) => {
+  const uniqueByKey = new Map<string, Word>();
+
+  for (const word of sourceWords) {
+    const englishKey = word.english.trim().toLowerCase();
+    const fallbackKey = `${englishKey}::${word.russian.trim().toLowerCase()}`;
+    const key = englishKey || word.id?.trim() || fallbackKey;
+
+    if (!uniqueByKey.has(key)) {
+      uniqueByKey.set(key, word);
+    }
+  }
+
+  return Array.from(uniqueByKey.values());
+};
+
 const escapeRegExp = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
 const buildWordVariants = (word: string) => {
@@ -156,24 +172,35 @@ const createMaskedExample = (example: string, targetWord: string) => {
   const normalizeAnswer = (value: string) => value.toLowerCase().trim();
 
 export default function ModernTrainingMode({ mode, words, searchParams }: ModernTrainingModeProps) {
+  const uniqueWords = useMemo(() => dedupeWords(words), [words]);
+  const trainingSessionKey = useMemo(
+    () => `${mode}|${searchParams.words ?? "all"}|${searchParams.setup ?? "false"}`,
+    [mode, searchParams.setup, searchParams.words],
+  );
   const [currentIndex, setCurrentIndex] = useState(0);
   const [userAnswer, setUserAnswer] = useState("");
   const [answers, setAnswers] = useState<Answer[]>([]);
   const [isCompleted, setIsCompleted] = useState(false);
   const [showResult, setShowResult] = useState(false);
-  const [shuffledWords, setShuffledWords] = useState<Word[]>(() => shuffleWords(words));
-  void searchParams;
+  const [shuffledWords, setShuffledWords] = useState<Word[]>(() => shuffleWords(uniqueWords));
 
   useEffect(() => {
-    setShuffledWords(shuffleWords(words));
-  }, [words]);
+    // Keep a stable word order during an active session.
+    // Reinitialize only when user starts another training context.
+    setShuffledWords(shuffleWords(uniqueWords));
+    setCurrentIndex(0);
+    setUserAnswer("");
+    setAnswers([]);
+    setIsCompleted(false);
+    setShowResult(false);
+  }, [trainingSessionKey]);
 
   const wordsById = useMemo(() => {
     return new Map(shuffledWords.map((word) => [word.id, word]));
   }, [shuffledWords]);
 
   // Если нет слов для выбранного режима
-  if (!words || words.length === 0) {
+  if (!uniqueWords || uniqueWords.length === 0) {
     let emptyMessage = "В вашем словаре нет слов для этого режима тренировки.";
     
     if (mode === 'definition') {
@@ -292,7 +319,7 @@ export default function ModernTrainingMode({ mode, words, searchParams }: Modern
 
   // Проверка ответа
   const checkAnswer = () => {
-    if (!userAnswer.trim()) return;
+    if (!currentWord || !userAnswer.trim()) return;
 
     const correctAnswer = getCorrectAnswer();
     const normalizedUserAnswer = normalizeAnswer(userAnswer);
@@ -331,7 +358,7 @@ export default function ModernTrainingMode({ mode, words, searchParams }: Modern
     setAnswers([]);
     setIsCompleted(false);
     setShowResult(false);
-    setShuffledWords(shuffleWords(words));
+    setShuffledWords(shuffleWords(uniqueWords));
   };
 
   // Показ статистики
@@ -358,7 +385,7 @@ export default function ModernTrainingMode({ mode, words, searchParams }: Modern
                 {/* Результаты по каждому слову */}
                 <div className="space-y-3 max-h-60 overflow-y-auto">
                   {answers.map((answer, index) => (
-                    <div key={answer.wordId} className="flex items-center justify-between bg-slate-900/50 rounded-lg p-3 border border-slate-700">
+                    <div key={`${answer.wordId}-${index}`} className="flex items-center justify-between bg-slate-900/50 rounded-lg p-3 border border-slate-700">
                       <div className="flex items-center space-x-3">
                         <div className={`w-6 h-6 rounded-full flex items-center justify-center ${answer.isCorrect ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'}`}>
                           {index + 1}
